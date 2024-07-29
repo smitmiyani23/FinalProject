@@ -196,9 +196,96 @@ Based on the logLoss metric, model 1 is the best model from Logistic regression 
 
 A classification tree model is a decision tree used for classifying data into distinct categories. It splits the data into subsets based on the values of predictor variables, creating a tree-like structure where each internal node represents a decision based on one predictor, and each leaf node represents a class label. The goal is to partition the data into groups that are as homogeneous as possible with respect to the target variable. Classification trees are straightforward to interpret and visualize, making them useful for understanding model decisions and relationships between variables. They also account for interaction between variable, making variable selection easier.
 
-#Random Forest
+## Model Selection
+
+We will be using same variables as Model 1 for consistency when comparing classes of models
+
+## Model Fit
+
+We will use `train_1` which includes the predictors corresponding to chosen variables. We will use the same CrossVal criteria as defined in `trctrl` . Creating `tree_grid1` associated with `method = "rpart"` for parameter tuning, Using `train()` to train the model with a grid search to find the optimal parameters that minimizes logloss
+
+```{r}
+# Defining a tuning grid for a rpart model
+tree_grid1 <- expand.grid(cp = seq(0, 0.2, by = 0.002))
+
+# Training the model using rpart method
+tree_fit <- train(Diabetes_binary ~.,
+                   data = train_1, 
+                   method = "rpart",
+                   trControl = trctrl,
+                   preProcess = c("center", "scale"),
+                   tuneGrid = tree_grid1,
+                   metric = "logLoss")
+```
+
+Evaluating the Model
+
+```{r}
+pred_tr <- predict(tree_fit,newdata = test, type = "prob")
+
+paste("Tree Classifier logLoss: ",logLoss(test_metrics, pred_tr$X1))
+```
+
+```{r}
+tree_fit
+```
+
+# Random Forest
 
 A random forest is an ensemble learning method that combines multiple classification trees to improve predictive accuracy and robustness. It builds many decision trees (usually hundreds) during training and outputs the mode of the classes (for classification) from all the trees. Random forests enhance prediction by averaging the results of multiple trees, reducing the risk of overfitting compared to a single decision tree. This method improves performance and generalization, making it a powerful tool for complex datasets and avoiding the limitations of a basic classification tree.
+
+## Model Selection
+
+We will be using same variables as Model 1 for consistency when comparing classes of models
+
+## Model Fit
+
+We will use `train_1` which includes the predictors corresponding to chosen variables. We will useCrossVal criteria as defined in `trctrl_rf` due to long runtime.
+
+```{r}
+#Defining CrossVal criteria
+trctrl_rf <- trainControl(
+  method = "repeatedcv",
+  number = 3,
+  repeats = 3,
+  summaryFunction = mnLogLoss,
+  classProbs = TRUE)
+```
+
+Creating `rf_grid` associated with `method = "ranger"` for parameter tuning, Using `train()` to train the model with a grid search to find the optimal parameters that minimizes logloss
+
+```{r}
+# Defining a tuning grid for rf- model.
+rf_grid <- expand.grid(
+  .mtry = seq(1, length(colnames(train_1))-1),
+  .splitrule= "extratrees",
+  .min.node.size = c(10, 20))
+
+# Training the model using random forest method
+rf_fit <- train(Diabetes_binary ~., 
+                data = train_1, 
+                method = "ranger",
+                trControl = trctrl,
+                num.trees = 100,
+                preProcess = c("center", "scale"),
+                tuneGrid = rf_grid,
+                metric = "logLoss")
+
+# Model Details
+rf_fit
+```
+
+Evaluating the Model
+
+```{r}
+pred_rf <- predict(rf_fit,newdata = test, type = "prob")
+
+paste("Random Forest logLoss: ",logLoss(test_metrics, pred_rf$X1))
+```
+
+# Best Model
+
+Based on logloss, the best fit model is `logreg_fit1.`
 
 #Others
 

@@ -95,6 +95,7 @@ library(plotly)
 library(reshape2)
 library(caret)
 library(Metrics)
+library(ranger)
 ```
 
 Loading the data into `diabetes_data` object using `read_csv()`
