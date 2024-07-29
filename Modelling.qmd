@@ -1,0 +1,30 @@
+---
+title: "Modelling"
+format: html
+editor: visual
+---
+
+# Document Details
+
+#### Author: *Smit Miyani*
+
+#### Collaborators: *N/A*
+
+#### Assignment: Final Project - Modelling
+
+#### Date: *26JUL24*
+
+#### Purpose
+
+*Model Selection and Tuning for Diabetes Dataset.*
+
+# 
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

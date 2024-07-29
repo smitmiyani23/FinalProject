@@ -1,0 +1,317 @@
+---
+title: "EDA"
+format: html
+editor: visual
+---
+
+# Document Details
+
+#### Author: *Smit Miyani*
+
+#### Collaborators: *N/A*
+
+#### Assignment: Final Project - EDA
+
+#### Date: *26JUL24*
+
+#### Purpose
+
+*Perform Exploratory Data Analysis with Diabetes Data set before modelling.*
+
+# Introduction
+
+Certainly! Here's a draft of an introduction for your analysis of the `diabetes_binary_health_indicators_BRFSS2015.csv` dataset, including brief and simple descriptions of each variable:
+
+------------------------------------------------------------------------
+
+## Selected Variables
+
+The `diabetes_binary_health_indicators_BRFSS2015.csv` dataset from Kaggle contains health-related data collected from the Behavioral Risk Factor Surveillance System (BRFSS) 2015 survey. This dataset is used to analyze various health indicators and their relationship to diabetes. The response variable, `Diabetes_binary`, indicates whether a respondent has diabetes. Below is a brief description of each variable in the dataset used for modelling:
+
+1.  **Diabetes_binary**: The Response Binary variable indicating whether the respondent has diabetes (1) or not (0).
+
+2.  **HighBP**: Binary variable indicating whether the respondent has high blood pressure (1) or not (0).
+
+3.  **HighChol**: Binary variable indicating whether the respondent has high cholesterol (1) or not (0).
+
+4.  **BMI**: Continuous variable representing the Body Mass Index (BMI) of the respondent.
+
+5.  **Smoker**: Binary variable indicating whether the respondent has smoked at least 100 cigarettes in their lifetime (1) or not (0).
+
+6.  **Stroke**: Binary variable indicating whether the respondent has had a stroke (1) or not (0).
+
+7.  **HeartDiseaseorAttack**: Binary variable indicating whether the respondent has had coronary heart disease or a myocardial infarction (1) or not (0).
+
+8.  **PhysActivity**: Binary variable indicating whether the respondent has engaged in physical activity (excluding their regular job) in the past 30 days (1) or not (0).
+
+9.  **Fruits**: Binary variable indicating whether the respondent consumes fruit at least once per day (1) or not (0).
+
+10. **Veggies**: Binary variable indicating whether the respondent consumes vegetables at least once per day (1) or not (0).
+
+11. **HvyAlcoholConsump**: Binary variable indicating heavy alcohol consumption, defined as more than 14 drinks per week for men and more than 7 drinks per week for women (1) or not (0).
+
+12. **AnyHealthcare**: Binary variable indicating whether the respondent has any kind of health care coverage (1) or not (0).
+
+13. **NoDocbcCost**: Binary variable indicating whether the respondent could not see a doctor in the past 12 months due to cost (1) or not (0).
+
+14. **GenHlth**: Ordinal variable indicating the respondent's general health status, with values ranging from 1 (excellent) to 5 (poor).
+
+15. **DiffWalk**: Binary variable indicating whether the respondent has serious difficulty walking or climbing stairs (1) or not (0).
+
+16. **Sex**: Binary variable indicating the sex of the respondent (1 for female, 0 for male).
+
+17. **Age**: Ordinal variable indicating the age category of the respondent, with values ranging from 1 (18-24 years) to 13 (80 years or older).
+
+18. **Education**: Ordinal variable indicating the highest level of education completed by the respondent, with values ranging from 1 (never attended school or only kindergarten) to 6 (college graduate).
+
+19. **Income**: Ordinal variable indicating the annual household income of the respondent, with values ranging from 1 (less than \$10,000) to 8 (\$75,000 or more).
+
+The ultimate goal of modeling this dataset is to develop predictive models that can accurately identify individuals at risk of having diabetes based on various health indicators. In the following sections, we will explore this data and build models to predict the presence of diabetes based on these health indicators.
+
+## Exploratory Data Analysis (EDA) Plan
+
+Performing EDA ensures that we start with a deep understanding of our data, leading to more informed and effective modeling decisions. Specifically, to identify patterns, distribution and insights associated with prediction and response variables, Following EDA will be performed:
+
+1.  **Inspect the Data** -Understand the structure of the dataset, check for missing values, and get an overview of the variables using `str()` and `is.na()`.
+2.  **Descriptive Statistics** -Summarize the central tendency, dispersion, and shape of the dataset's variables using `summary()`.
+3.  **Distribution of Target Variable** -Understand and explore the distribution of the response and prediction variables' distribution with histograms(for continuous variables) and bar charts (for categorical variables) using `ggplot`.
+4.  **Bivariate Analysis** -Examine relationships between the response variable and each independent variable .
+5.  **Correlation Analysis**
+    -   **Purpose**: Examine relationships between the prediction variables with each other via a correlation matrix to check for multicolinearity using `cor()` from base R.\
+
+# Data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+#Remove Warnings
+```
+
+## Importing Packages and Reading Data
+
+Importing necessary packages for EDA
+
+```{r}
+#Packages
+library(tidyverse)
+library(caret)
+library(ggplot2)
+library(plotly)
+library(reshape2)
+```
+
+Loading the data into `diabetes_data` object using `read_csv()`
+
+```{r}
+#reading in data
+diabetes_data <- read_csv("diabetes_binary_health_indicators_BRFSS2015.csv")
+```
+
+\
+Looking at the structure of data using `str()`.
+
+```{r}
+str(diabetes_data)
+
+```
+
+Removing the columns `CholCheck`, `MentHlth` and `PhysHlth` as we wont be using them for modelling using `select()`
+
+```{r}
+diabetes_data <- diabetes_data |>
+  select(-c(CholCheck,MentHlth,PhysHlth))
+```
+
+Descriptive Statistics of data using `summary()`
+
+```{r}
+summary(diabetes_data)
+```
+
+Converting categorical variables and response variable into factors type using `as.factor()` within `mutate()`. To achieve this, we first convert all columns into factor and then convert the numeric variable back to type numeric using `as.numeric()` in `mutate()`.
+
+```{r}
+diabetes_processed <- diabetes_data |>
+  #Converts all columns to factors
+  mutate(across(everything(),as.factor)) |>
+  #Converts the only non-categorical variable back to numeric 
+  mutate(BMI = as.numeric(BMI))
+
+head(diabetes_processed)
+```
+
+Checking for any missing data:
+
+```{r}
+#Missing values in each column
+colSums(is.na(diabetes_data))
+
+```
+
+# Summarizations
+
+## Response Variable
+
+Since the response variable is binary, we can obtain estimates "p_hat" and "q_hat"
+
+```{r}
+#Properly coeerce factors to numeric
+binary_vec$diabetes_processed.Diabetes_binary <- as.numeric(binary_vec$diabetes_processed.Diabetes_binary)
+binary_vec$bool <- ifelse(
+  binary_vec$diabetes_processed.Diabetes_binary == 1,yes = 0,no = 1 )
+binary_vec
+
+p_hat <- sum((binary_vec$bool))/length(diabetes_processed$Diabetes_binary)
+
+q_hat <- 1-p_hat
+
+paste("p_hat is", p_hat); paste("q_hat is", q_hat)
+```
+
+Visualizing the response variable distribution using histogram
+
+```{r}
+ggplot(data = diabetes_processed, aes(x = Diabetes_binary )) +
+  geom_bar(show.legend = TRUE) +
+  xlab(label = "Diabetes_binary") +
+  ylab(label = "Frequency") +
+  ggtitle(label = "Diabetes Binary Distribution")
+  
+```
+
+## Predictor Variables
+
+### Univariate Analysis
+
+Returning mean for each column using `colMeans()`
+
+```{r}
+#Using the numeric Dataset "Diabetes_Data"
+diabetes_data |>
+  select(-Diabetes_binary) |>
+  colMeans()
+```
+
+Visualizing distributions of numeric variables (only one present in this case) by faceted histograms. To do this, we use `gather()` to generate key value pairs: "variable" and "value". We set `x = value` and facet using `facet_wrap(~variable)`
+
+```{r}
+# Reshape the dataframe to long format
+df_long_num <- gather(diabetes_processed |>
+                    select(-Diabetes_binary) |>    
+                    select(where(is.numeric)), key = "variable", value = "value")
+
+# Create the combined histogram plot
+ggplot(df_long_num, aes(x = value)) +
+  geom_histogram(binwidth = 1) +
+  theme(axis.text.x = element_text(angle = 45,
+                                   vjust = 1,
+                                   hjust = 1)) +
+  facet_wrap(~ variable, scales = "free") +
+  ggtitle("Histograms of all Numeric columns")
+
+```
+
+```{r}
+# Reshape the dataframe to long format
+df_long_fact <- gather(diabetes_processed |>
+                    select(-Diabetes_binary) |>     
+                    select(where(is.factor)), key = "variable", value = "value")
+
+# Create the combined histogram plot
+ggplot(df_long_fact, aes(x = as.factor(as.numeric(value)))) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45,
+                                   vjust = 1,
+                                   hjust = 1,
+                                   size = 4) ) +
+  facet_wrap(~ variable, scales = "free",ncol = 4) +
+  ggtitle("BarChart of all Categorical Predictors") +
+  xlab("Categories")+
+  ylab("Frequency")
+```
+
+### Bivariate Analysis
+
+```{r}
+df_pred <- diabetes_processed |>
+  select(-c(Diabetes_binary,BMI))
+df_long_bi <- diabetes_processed |>
+  pivot_longer(cols = colnames(df_pred),names_to = "variables",values_to = "values")
+
+
+
+# Create the faceted plot
+ggplot(df_long_bi, aes(x = values, fill = Diabetes_binary)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~ variables, scales = "free_x", nrow = 5) +
+  theme_minimal() +
+  labs(title = "Bivariate Faceted Plots",
+       x = "Predictor Value",
+       y = "Proportion")
+
+```
+
+```{r}
+df_long_cont <- diabetes_processed |>
+  pivot_longer(cols = BMI,names_to = "variables",values_to = "values")
+
+
+
+# Create the faceted plot
+ggplot(df_long_cont, aes(x = values, y = Diabetes_binary)) +
+  geom_jitter(width = 0.2) +
+  facet_wrap(~ variables, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Bivariate Faceted Plots with Binary Response",
+       x = "Response",
+       y = "Predictor Value")
+
+```
+
+### Correlation Between Predictors
+
+Yielding a Covariance Matrix (Without Response) to determine if some variables vary together. This helps with variable selection without loosing too much variance.
+
+```{r}
+diabetes_cor <- round(
+  cor(diabetes_data |>
+    select(-Diabetes_binary),
+  method = "spearman"),2)
+head(diabetes_cor)
+```
+
+```{r}
+
+melted_cormat <- melt(diabetes_cor)
+melted_cormat$text <- paste0("Var1: ", melted_cormat$Var1,", " ,"Var2: ", melted_cormat$Var2,", ",  "Corr: ",melted_cormat$value)
+head(melted_cormat)
+```
+
+```{r}
+
+plt <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value,text = text))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", 
+                      high = "red", 
+                      mid = "white", 
+                      midpoint = 0, 
+                      limit = c(-1,1), 
+                      space = "Lab", 
+                      name="Correlation") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45,
+                                   vjust = 1,
+                                   hjust = 1)) +
+  coord_fixed() +
+  labs(title = "Correlation Matrix for Predictors (Ranked)",
+       x = "Variables Horizontal",
+       y = "Variables Vertical")
+  
+plt
+```
+
+```{r}
+ggplotly(plt,tooltip = "text")
+```
+
+[Click here for the Modeling Page](Modeling.html)
