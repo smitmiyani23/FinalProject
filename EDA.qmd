@@ -20,10 +20,6 @@ editor: visual
 
 # Introduction
 
-Certainly! Here's a draft of an introduction for your analysis of the `diabetes_binary_health_indicators_BRFSS2015.csv` dataset, including brief and simple descriptions of each variable:
-
-------------------------------------------------------------------------
-
 ## Selected Variables
 
 The `diabetes_binary_health_indicators_BRFSS2015.csv` dataset from Kaggle contains health-related data collected from the Behavioral Risk Factor Surveillance System (BRFSS) 2015 survey. This dataset is used to analyze various health indicators and their relationship to diabetes. The response variable, `Diabetes_binary`, indicates whether a respondent has diabetes. Below is a brief description of each variable in the dataset used for modelling:
@@ -76,8 +72,7 @@ Performing EDA ensures that we start with a deep understanding of our data, lead
 2.  **Descriptive Statistics** -Summarize the central tendency, dispersion, and shape of the dataset's variables using `summary()`.
 3.  **Distribution of Target Variable** -Understand and explore the distribution of the response and prediction variables' distribution with histograms(for continuous variables) and bar charts (for categorical variables) using `ggplot`.
 4.  **Bivariate Analysis** -Examine relationships between the response variable and each independent variable .
-5.  **Correlation Analysis**
-    -   **Purpose**: Examine relationships between the prediction variables with each other via a correlation matrix to check for multicolinearity using `cor()` from base R.\
+5.  **Correlation Analysis-** Examine relationships between the prediction variables with each other via a correlation matrix to check for multicolinearity using `cor()` from base R.\
 
 # Data
 
@@ -98,6 +93,7 @@ library(caret)
 library(ggplot2)
 library(plotly)
 library(reshape2)
+library(caret)
 ```
 
 Loading the data into `diabetes_data` object using `read_csv()`

@@ -18,7 +18,92 @@ editor: visual
 
 *Model Selection and Tuning for Diabetes Dataset.*
 
-# 
+# Introduction
+
+The `diabetes_binary_health_indicators_BRFSS2015.csv` dataset from Kaggle contains health data from the BRFSS 2015 survey, focusing on the relationship between various health indicators and diabetes. The response variable, `Diabetes_binary`, indicates the presence of diabetes (1) or not (0).
+
+### Selected Variables
+
+Key variables used for modeling include:
+
+-   **Diabetes_binary**: Response variable (1 for diabetes, 0 for no diabetes).
+-   **HighBP**, **HighChol**, **Smoker**, **Stroke**, **HeartDiseaseorAttack**, **PhysActivity**, **Fruits**, **Veggies**, **HvyAlcoholConsump**, **AnyHealthcare**, **NoDocbcCost**, **DiffWalk**, **Sex**: Binary variables (1 for Yes, 0 for No).
+-   **BMI**: Continuous variable.
+-   **GenHlth**, **Age**, **Education**, **Income**: Ordinal variables.
+
+### Modeling Approach
+
+To predict the presence of diabetes based on these health indicators, we will employ three different modeling techniques:
+
+1.  **Logistic Regression**: A statistical model that estimates the probability of a binary outcome based on one or more predictor variables.
+
+2.  **Classification Tree**: A decision tree algorithm that splits the data into subsets based on the value of input features to predict the outcome.
+
+3.  **Random Forest**: An ensemble learning method that constructs multiple decision trees and merges them to produce a more accurate and stable prediction.
+
+The goal is to select the best model based on predictive performance for deployment in an API.
+
+## Modelling Metric: Logloss
+
+### What is Logloss?
+
+Log loss is a way to measure how well a model predicts probabilities, especially for binary outcomes (like predicting if someone has diabetes or not). It measures the performance of a classification model by evaluating the uncertainty of the predicted probabilities. The farther the prediction probability is from the actual value, higher is its log-loss value. 
+
+### Advantages over Accuracy
+- Unlike accuracy, log loss takes into account the predicted probabilities. It penalizes confident wrong predictions more than less confident ones, thus encouraging well-calibrated probabilities
+
+- Accuracy can be misleading in datasets where simply predicting the majority class can yield high accuracy but poor performance. Log loss, however, considers the predicted probabilities for both classes, providing a better evaluation
+
+# Data Split
+
+Splitting the data in test set and train set using `createDataPartition()`. All the models will be tuned with Cross Validation on `train` and evaluated on `test`.
+
+```{r}
+set.seed(333) #For Reproducibility 
+
+split <- createDataPartition(y = diabetes_processed$Diabetes_binary, 
+                             p = 0.7, 
+                             list = FALSE)
+train <- diabetes_processed[split, ]
+test <- diabetes_processed[-split, ]
+
+#Check size
+dim(train) ; dim(test);
+anyNA(diabetes_processed); #final check for NULL values
+```
+
+# Logistic Regression Models
+
+Logistic regression is a statistical method used to model the relationship between a binary response variable and one or more predictor variables (can be continuous, binary, ordinal or other categorical type). It uses the logistic function to model probabilities and applies the GLM framework where the link function connects the mean of the distribution of the outcome variable to a linear combination of the predictors. For logistic regression, the link function is the logit function . It can handle continuous, binary, and ordinal predictors (using dummies) effectively, making it a good choice for various types of data in predicting binary outcomes.
+
+```{r}
+dummies <- dummyVars(data = diabetes_processed |>
+                       select(where(is.factor)) |>
+                       select(-(starts_with("Diabetes"))),
+                     formula = ~.)
+diabetes_cat <- predict(dummies, newdata = diabetes_processed)
+diabetes_cat <- as.data.frame(diabetes_cat)
+head(diabetes_cat)
+```
+
+```{r}
+diabetes_combined <- bind_cols(diabetes_cat,
+                            diabetes_processed |>
+                              select(where(is.numeric),Diabetes_binary))
+
+#Preview
+head(diabetes_combined)
+```
+
+# Classification Tree
+A classification tree model is a decision tree used for classifying data into distinct categories. It splits the data into subsets based on the values of predictor variables, creating a tree-like structure where each internal node represents a decision based on one predictor, and each leaf node represents a class label. The goal is to partition the data into groups that are as homogeneous as possible with respect to the target variable. Classification trees are straightforward to interpret and visualize, making them useful for understanding model decisions and relationships between variables. They also account for interaction between variable, making variable selection easier.
+
+
+#Random Forest
+
+A random forest is an ensemble learning method that combines multiple classification trees to improve predictive accuracy and robustness. It builds many decision trees (usually hundreds) during training and outputs the mode of the classes (for classification) from all the trees. Random forests enhance prediction by averaging the results of multiple trees, reducing the risk of overfitting compared to a single decision tree. This method improves performance and generalization, making it a powerful tool for complex datasets and avoiding the limitations of a basic classification tree.
+
+
 
 You can add options to executable code like this
 
