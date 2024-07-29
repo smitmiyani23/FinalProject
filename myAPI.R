@@ -35,8 +35,59 @@ logreg_fit <- train(Diabetes_binary ~.,
                      metric = "logLoss",
                      tuneLength = 10
 )
-#Example prediction
-testing <- as.tibble(train[3,])
 
-predict(logreg_fit,testing,type = "prob")
+
+#Calculate most abundant values for Categorical Var using.a custom mode function
+calculate_mode <- function(x) {
+  uniq_x <- unique(x)
+  uniq_x[which.max(tabulate(match(x, uniq_x)))]
+}
+
+#Yield the mode for each categorical variables
+training |>
+  select(-c(Diabetes_binary,BMI)) |>
+  mutate(across(everything(),as.character)) |>
+  mutate(across(everything(),as.numeric)) |>
+  map(.f = calculate_mode)
+
+#Yield the mean for continuous variable
+training |>
+  select(BMI) |>
+  map(.f = mean)
+
+#Find multiple of two numbers
+#* @param Age Age Group 
+#* @param Sex Sex 
+#* @param BMI BMI
+#* @param GenHlth General Health
+#* @param HighBP High BP
+#* @param HighChol High Cholesterol
+#* @param Stroke Stroke
+#* @param HeartDiseaseorAttack Heart Disease or Heart Attack
+#* @param DiffWalk Difficulty Walking
+#* @get /pred
+function(Age= 9, Sex=0, BMI= 17.38218, GenHlth=2, HighBP=0, HighChol=0, Stroke=0, HeartDiseaseorAttack=0, DiffWalk=0 ){
   
+  #Creating a data frame for each user input to use in prediction
+  predictor_input <- data.frame(Age= as.factor(Age), Sex=as.factor(Sex), BMI= as.numeric(BMI), GenHlth=as.factor(GenHlth), HighBP=as.factor(HighBP), HighChol=as.factor(HighChol), Stroke=as.factor(Stroke), HeartDiseaseorAttack=as.factor(HeartDiseaseorAttack), DiffWalk=as.factor(DiffWalk))
+  
+  #prediction
+  class_pred <- predict(logreg_fit,predictor_input)
+  if(class_pred == "X0"){
+    prob_pred <- predict(logreg_fit,predictor_input,type = "prob")$X0
+  } else {
+    prob_pred <- predict(logreg_fit,predictor_input,type = "prob")$X1
+  }
+  
+  
+  return(list(
+    prediction = paste("The prediction is ", class_pred, "with predicted probability of ",prob_pred),
+    example_url = list("http://127.0.0.1:8080/pred?Age=9&Sex=1&BMI=17.3822&GenHlth=5&HighBP=1&HighChol=1&Stroke=1&HeartDiseaseorAttack=1&DiffWalk=1",
+                       "http://127.0.0.1:8080/pred?Age=13&Sex=0&BMI=37.3822&GenHlth=3&HighBP=0&HighChol=1&Stroke=1&HeartDiseaseorAttack=1&DiffWalk=1")))
+}
+
+#Send a message
+#* @get /info
+function(){
+  list(name = "Smit Miyani", github_page_url = "https://github.com/smitmiyani23/FinalProject/tree/main")
+}
