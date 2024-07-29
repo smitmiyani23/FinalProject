@@ -47,12 +47,13 @@ The goal is to select the best model based on predictive performance for deploym
 
 ### What is Logloss?
 
-Log loss is a way to measure how well a model predicts probabilities, especially for binary outcomes (like predicting if someone has diabetes or not). It measures the performance of a classification model by evaluating the uncertainty of the predicted probabilities. The farther the prediction probability is from the actual value, higher is its log-loss value. 
+Log loss is a way to measure how well a model predicts probabilities, especially for binary outcomes (like predicting if someone has diabetes or not). It measures the performance of a classification model by evaluating the uncertainty of the predicted probabilities. The farther the prediction probability is from the actual value, higher is its log-loss value.
 
 ### Advantages over Accuracy
-- Unlike accuracy, log loss takes into account the predicted probabilities. It penalizes confident wrong predictions more than less confident ones, thus encouraging well-calibrated probabilities
 
-- Accuracy can be misleading in datasets where simply predicting the majority class can yield high accuracy but poor performance. Log loss, however, considers the predicted probabilities for both classes, providing a better evaluation
+-   Unlike accuracy, log loss takes into account the predicted probabilities. It penalizes confident wrong predictions more than less confident ones, thus encouraging well-calibrated probabilities
+
+-   Accuracy can be misleading in datasets where simply predicting the majority class can yield high accuracy but poor performance. Log loss, however, considers the predicted probabilities for both classes, providing a better evaluation
 
 # Data Split
 
@@ -74,7 +75,132 @@ anyNA(diabetes_processed); #final check for NULL values
 
 # Logistic Regression Models
 
+## Model Description
+
 Logistic regression is a statistical method used to model the relationship between a binary response variable and one or more predictor variables (can be continuous, binary, ordinal or other categorical type). It uses the logistic function to model probabilities and applies the GLM framework where the link function connects the mean of the distribution of the outcome variable to a linear combination of the predictors. For logistic regression, the link function is the logit function . It can handle continuous, binary, and ordinal predictors (using dummies) effectively, making it a good choice for various types of data in predicting binary outcomes.
+
+## Model Selection
+
+We will have three different fits for logistic regression type. The variable selected for each models are based on type of predictors as follows:
+
+1.  Each model will include the Base variables ("Age", "Sex", "BMI" and "GenHlth") and a cluster of variables grouped by classes. These classes are:
+
+    1.  Condition: "HighBP", "HighChol", "Stroke", "HeartDiseaseorAttack" and "DiffWalk"
+
+    2.  Habits (Good and Bad): "Smoker", "HvyAlcoholConsump", "PhysActivity", "Fruits" and "Veggies"
+
+    3.  Economic Circumstances: "AnyHealthcare", "NoDocbcCost", "Education" and "Income"\
+
+2.  Model 1 will fit \~Base Variables + Condition Variables.\
+
+3.  Model 2 will fit \~ Base Variables + Habits Variables.\
+
+4.  Model 3 will fit \~ Base Variables + Economic Circumstances Variables.\
+
+5.  The best model be chosen using CV with log-loss as the metric.
+
+## Model Fit
+
+Selecting the columns for each fit based on designated variable classes
+
+```{r}
+#Colnames based on Variable classes
+base_cols <- c("Age", "Sex", "BMI", "GenHlth")
+cond_cols <- c("HighBP", "HighChol", "Stroke", "HeartDiseaseorAttack", "DiffWalk")
+habit_cols <- c("Smoker", "HvyAlcoholConsump", "PhysActivity", "Fruits", "Veggies")
+econ_cols <- c("AnyHealthcare", "NoDocbcCost", "Education", "Income")
+
+#Ensuring that the levels of the factor are  valid names for model
+train$Diabetes_binary <- make.names(as.factor(train$Diabetes_binary))
+test$Diabetes_binary <- make.names(as.factor(test$Diabetes_binary))
+
+# Trainsets based on different models
+train_1 <- train |>
+  select(all_of(base_cols), all_of(cond_cols),Diabetes_binary)
+
+train_2 <- train |>
+  select(all_of(base_cols), all_of(habit_cols),Diabetes_binary)
+
+train_3 <- train |>
+  select(all_of(base_cols), all_of(econ_cols),Diabetes_binary)
+
+```
+
+Defining the CrossVal criteria (5 Fold with 3 repeats) with `trainControl()` .
+
+```{r}
+#Defining CrossVal criteria
+trctrl <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 3,
+  summaryFunction = mnLogLoss,
+  classProbs = TRUE)
+```
+
+Fitting Models using `train()` .
+
+```{r}
+
+#Model 1
+logreg_fit1 <- train(Diabetes_binary ~., data = train_1, method = "glm",
+ trControl=trctrl,
+ preProcess = c("center", "scale"),
+ family = "binomial",
+ metric = "logLoss",
+ tuneLength = 10
+ )
+
+#Model2
+logreg_fit2 <- train(Diabetes_binary ~., data = train_2, method = "glm",
+ trControl=trctrl,
+ preProcess = c("center", "scale"),
+ family = "binomial",
+ metric = "logLoss",
+ tuneLength = 10
+ )
+
+
+#Model 3
+logreg_fit3 <- train(Diabetes_binary ~., data = train_3, method = "glm",
+ trControl=trctrl,
+ preProcess = c("center", "scale"),
+ family = "binomial",
+ metric = "logLoss",
+ tuneLength = 10
+ )
+
+```
+
+Evaluating the Models
+
+```{r}
+#Usable format for us
+test_metrics <- as.numeric(substr(test$Diabetes_binary,2,2))
+
+#predictions
+pred_lr1 <- predict(logreg_fit1,newdata = test, type = "prob")
+pred_lr2 <- predict(logreg_fit2,newdata = test, type = "prob")
+pred_lr3 <- predict(logreg_fit3,newdata = test, type = "prob")
+
+#metrics
+paste("Model 1 logLoss: ",logLoss(test_metrics, pred_lr1$X1));
+paste("Model 2 logLoss: ",logLoss(test_metrics, pred_lr2$X1));
+paste("Model 3 logLoss: ",logLoss(test_metrics, pred_lr3$X1));
+
+```
+
+Based on the logLoss metric, model 1 is the best model from Logistic regression type models. \
+
+# Classification Tree
+
+A classification tree model is a decision tree used for classifying data into distinct categories. It splits the data into subsets based on the values of predictor variables, creating a tree-like structure where each internal node represents a decision based on one predictor, and each leaf node represents a class label. The goal is to partition the data into groups that are as homogeneous as possible with respect to the target variable. Classification trees are straightforward to interpret and visualize, making them useful for understanding model decisions and relationships between variables. They also account for interaction between variable, making variable selection easier.
+
+#Random Forest
+
+A random forest is an ensemble learning method that combines multiple classification trees to improve predictive accuracy and robustness. It builds many decision trees (usually hundreds) during training and outputs the mode of the classes (for classification) from all the trees. Random forests enhance prediction by averaging the results of multiple trees, reducing the risk of overfitting compared to a single decision tree. This method improves performance and generalization, making it a powerful tool for complex datasets and avoiding the limitations of a basic classification tree.
+
+#Others
 
 ```{r}
 dummies <- dummyVars(data = diabetes_processed |>
@@ -87,6 +213,10 @@ head(diabetes_cat)
 ```
 
 ```{r}
+colnames(diabetes_processed)
+```
+
+```{r}
 diabetes_combined <- bind_cols(diabetes_cat,
                             diabetes_processed |>
                               select(where(is.numeric),Diabetes_binary))
@@ -94,16 +224,6 @@ diabetes_combined <- bind_cols(diabetes_cat,
 #Preview
 head(diabetes_combined)
 ```
-
-# Classification Tree
-A classification tree model is a decision tree used for classifying data into distinct categories. It splits the data into subsets based on the values of predictor variables, creating a tree-like structure where each internal node represents a decision based on one predictor, and each leaf node represents a class label. The goal is to partition the data into groups that are as homogeneous as possible with respect to the target variable. Classification trees are straightforward to interpret and visualize, making them useful for understanding model decisions and relationships between variables. They also account for interaction between variable, making variable selection easier.
-
-
-#Random Forest
-
-A random forest is an ensemble learning method that combines multiple classification trees to improve predictive accuracy and robustness. It builds many decision trees (usually hundreds) during training and outputs the mode of the classes (for classification) from all the trees. Random forests enhance prediction by averaging the results of multiple trees, reducing the risk of overfitting compared to a single decision tree. This method improves performance and generalization, making it a powerful tool for complex datasets and avoiding the limitations of a basic classification tree.
-
-
 
 You can add options to executable code like this
 
