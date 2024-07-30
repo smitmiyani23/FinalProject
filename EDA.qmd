@@ -354,4 +354,4 @@ Creating an interactive plot using `plotly::ggplotly()`
 ggplotly(plt,tooltip = "text")
 ```
 
-[Click here for the Modeling Page](Modeling.html)
+[Click here for the Modeling Page](Modelling.html)
