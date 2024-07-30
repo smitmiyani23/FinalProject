@@ -96,7 +96,7 @@ function(Age= 9, Sex=0, BMI= 17.38218, GenHlth=2, HighBP=0, HighChol=0, Stroke=0
 #Send a message
 #* @get /info
 function(){
-  list(name = "Smit Miyani", github_page_url = "https://github.com/smitmiyani23/FinalProject/tree/main")
+  list(name = "Smit Miyani", github_page_url = "https://smitmiyani23.github.io/FinalProject/")
 }
 
 ##Example Queries
