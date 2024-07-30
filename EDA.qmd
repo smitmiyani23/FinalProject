@@ -70,9 +70,10 @@ Performing EDA ensures that we start with a deep understanding of our data, lead
 
 1.  **Inspect the Data** -Understand the structure of the dataset, check for missing values, and get an overview of the variables using `str()` and `is.na()`.
 2.  **Descriptive Statistics** -Summarize the central tendency, dispersion, and shape of the dataset's variables using `summary()`.
-3.  **Distribution of Target Variable** -Understand and explore the distribution of the response and prediction variables' distribution with histograms(for continuous variables) and bar charts (for categorical variables) using `ggplot`.
-4.  **Bivariate Analysis** -Examine relationships between the response variable and each independent variable .
-5.  **Correlation Analysis-** Examine relationships between the prediction variables with each other via a correlation matrix to check for multicolinearity using `cor()` from base R.\
+3.  **Distribution of Target Variable** -Understand and explore the binary response variables' distribution with bar chart to check for class imbalance
+4.  **Univariate Analysis** -Understand and explore the prediction variables' distribution with histograms(for continuous variables) and bar charts (for categorical variables) using `ggplot`
+5.  **Bivariate Analysis** -Examine relationships between the response variable and each independent variable,r .
+6.  **Correlation Analysis-** Examine relationships between the prediction variables with each other via a correlation matrix to check for multicolinearity using `cor()` from base R.\
 
 # Data
 
@@ -106,7 +107,7 @@ diabetes_data <- read_csv("diabetes_binary_health_indicators_BRFSS2015.csv")
 ```
 
 \
-Looking at the structure of data using `str()`.
+Looking at the structure of data using `str()` to determine what kind of pre-processing is needed
 
 ```{r}
 str(diabetes_data)
@@ -120,7 +121,7 @@ diabetes_data <- diabetes_data |>
   select(-c(CholCheck,MentHlth,PhysHlth))
 ```
 
-Descriptive Statistics of data using `summary()`
+Descriptive Statistics of data using `summary()`. (This is done before coercing to factors as this will yield useful stats like p_hat and s_error(p_hat)
 
 ```{r}
 summary(diabetes_data)
@@ -166,7 +167,7 @@ q_hat <- 1-p_hat
 paste("p_hat is", p_hat); paste("q_hat is", q_hat)
 ```
 
-Visualizing the response variable distribution using histogram
+Visualizing the response variable distribution using histogram. This tells us if there is class imbalance
 
 ```{r}
 ggplot(data = diabetes_processed, aes(x = Diabetes_binary )) +
@@ -177,11 +178,19 @@ ggplot(data = diabetes_processed, aes(x = Diabetes_binary )) +
   
 ```
 
+There is a class imbalance, therefore using logloss is preferable over accuracy to train models.
+
 ## Predictor Variables
 
 ### Univariate Analysis
 
-Returning mean for each column using `colMeans()`
+Exploring the individual distribution of predictor variables:
+
+1.  Gives an overview of the central tendency and variability of the variable
+2.  Visualizing the distribution is crucial for identifying skewness and the presence of any outlines.
+3.  Check validity of predictor entries (check for non logical entries)\
+
+Returning mean for each column using `colMeans()` to yield mean for each predictor. This checks for class imbalance and non logical entries
 
 ```{r}
 #Using the numeric Dataset "Diabetes_Data"
@@ -209,6 +218,8 @@ ggplot(df_long_num, aes(x = value)) +
 
 ```
 
+Visualizing distributions of categorical variables similarly except using geom_bar() to yeild bar plots for binary and ordinal variables in the dataset.
+
 ```{r}
 # Reshape the dataframe to long format
 df_long_fact <- gather(diabetes_processed |>
@@ -230,37 +241,50 @@ ggplot(df_long_fact, aes(x = as.factor(as.numeric(value)))) +
 
 ### Bivariate Analysis
 
+Exploring the relationship of predictor variables with response:
+
+1.  Helps in selecting and prioritizing predictor variables with strong associations with the response variable
+2.  Detects patterns or trends in the data, such as linear or non-linear relationships, which can guide the choice of models and transformations.\\
+
+Visualizing relationships of categorical variables by faceted stacked bar plots. To do this, we create a long data set using `pivot_longer()` . Then we create stacked bar plots using `fill` argument within `aes()` and use `geom_bar()` . This visualizes the proportion of response in each group/category of the corresponding predictor variables.
+
 ```{r}
+#Select Categorical Variables
 df_pred <- diabetes_processed |>
   select(-c(Diabetes_binary,BMI))
+
+#Create Long Dataset
 df_long_bi <- diabetes_processed |>
   pivot_longer(cols = colnames(df_pred),names_to = "variables",values_to = "values")
 
 
 
-# Create the faceted plot
+# Create the faceted stacked bar plot
 ggplot(df_long_bi, aes(x = values, fill = Diabetes_binary)) +
   geom_bar(position = "fill") +
   facet_wrap(~ variables, scales = "free_x", nrow = 5) +
   theme_minimal() +
-  labs(title = "Bivariate Faceted Plots",
+  labs(title = "Bivariate Faceted Stacked Bar Plots",
        x = "Predictor Value",
        y = "Proportion")
 
 ```
 
+Visualizing relationships of continuous variable (only one in this dataset by faceted jitter plots. We perform similar steps as above but use `geom_jitter()` for jitters plots. This visualizes the proportion of response in an interval of continuous predictors (`BMI` here).
+
 ```{r}
+#Select continous variable and create long dataset
 df_long_cont <- diabetes_processed |>
   pivot_longer(cols = BMI,names_to = "variables",values_to = "values")
 
 
 
-# Create the faceted plot
+# Create the jitter plot
 ggplot(df_long_cont, aes(x = values, y = Diabetes_binary)) +
   geom_jitter(width = 0.2) +
   facet_wrap(~ variables, scales = "free_y") +
   theme_minimal() +
-  labs(title = "Bivariate Faceted Plots with Binary Response",
+  labs(title = "Bivariate Jitter Plot with Binary Response",
        x = "Response",
        y = "Predictor Value")
 
@@ -268,9 +292,10 @@ ggplot(df_long_cont, aes(x = values, y = Diabetes_binary)) +
 
 ### Correlation Between Predictors
 
-Yielding a Covariance Matrix (Without Response) to determine if some variables vary together. This helps with variable selection without loosing too much variance.
+Yielding a Covariance Matrix (Without Response) to determine if some variables vary together. This helps with variable selection without loosing too much variance if there is a strong evidence of multicolinearity. For this we utilize `cor()` from R base to generate a correlation matrix.
 
 ```{r}
+#Creating a Correlation Matrix
 diabetes_cor <- round(
   cor(diabetes_data |>
     select(-Diabetes_binary),
@@ -278,12 +303,25 @@ diabetes_cor <- round(
 head(diabetes_cor)
 ```
 
-```{r}
+Reshaping the correlation matrix using `reshape2::melt()` to make data compatible for heatmap style plot from `ggplot2` .
 
+```{r}
+#Reshaping to make it compatible for heatmap style graph
 melted_cormat <- melt(diabetes_cor)
-melted_cormat$text <- paste0("Var1: ", melted_cormat$Var1,", " ,"Var2: ", melted_cormat$Var2,", ",  "Corr: ",melted_cormat$value)
+
+#creating a new column for use in interactive heatmap
+melted_cormat$text <- paste0("Var1: ",
+                            melted_cormat$Var1,
+                            ", " ,
+                            "Var2: ",
+                            melted_cormat$Var2,
+                            ", ",
+                            "Corr: ",
+                            melted_cormat$value)
 head(melted_cormat)
 ```
+
+Visualizing the correlation matrix using `geom_tile()` .
 
 ```{r}
 
@@ -307,6 +345,8 @@ plt <- ggplot(data = melted_cormat, aes(Var2, Var1, fill = value,text = text))+
   
 plt
 ```
+
+Creating an interactive plot using `plotly::ggplotly()`
 
 ```{r}
 ggplotly(plt,tooltip = "text")

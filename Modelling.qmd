@@ -190,7 +190,12 @@ paste("Model 3 logLoss: ",logLoss(test_metrics, pred_lr3$X1));
 
 ```
 
-Based on the logLoss metric, model 1 is the best model from Logistic regression type models. \
+Based on the logLoss metric, `logreg_fit1` is the best model from Logistic regression type models with 0.32136. \
+
+```{r}
+#Model
+logreg_fit1
+```
 
 # Classification Tree
 
@@ -226,7 +231,10 @@ pred_tr <- predict(tree_fit,newdata = test, type = "prob")
 paste("Tree Classifier logLoss: ",logLoss(test_metrics, pred_tr$X1))
 ```
 
+The logloss for `tree_fit` is infitnity.
+
 ```{r}
+#Model
 tree_fit
 ```
 
@@ -283,44 +291,16 @@ pred_rf <- predict(rf_fit,newdata = test, type = "prob")
 paste("Random Forest logLoss: ",logLoss(test_metrics, pred_rf$X1))
 ```
 
+The logloss for `rf_fit` is 0.32143.
+
+```{r}
+rf_fit
+```
+
 # Best Model
 
-Based on logloss, the best fit model is `logreg_fit1.`
+The best fit model is `logreg_fit1` with logloss of 0.32136. However the logloss of `rf_fit` 0.32143 which is very close second. On a different test set the it is not unlikely that the `rf_fit` model generalizes better. It is difficult to tell them apart.
 
 ```{r}
 logreg_fit1
 ```
-
-#Others
-
-```{r}
-dummies <- dummyVars(data = diabetes_processed |>
-                       select(where(is.factor)) |>
-                       select(-(starts_with("Diabetes"))),
-                     formula = ~.)
-diabetes_cat <- predict(dummies, newdata = diabetes_processed)
-diabetes_cat <- as.data.frame(diabetes_cat)
-head(diabetes_cat)
-```
-
-```{r}
-colnames(diabetes_processed)
-```
-
-```{r}
-diabetes_combined <- bind_cols(diabetes_cat,
-                            diabetes_processed |>
-                              select(where(is.numeric),Diabetes_binary))
-
-#Preview
-head(diabetes_combined)
-```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).

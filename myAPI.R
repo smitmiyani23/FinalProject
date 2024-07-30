@@ -1,4 +1,14 @@
-#Loading rhw file
+#run packages
+library(tidyverse)
+library(caret)
+library(ggplot2)
+library(plotly)
+library(reshape2)
+library(caret)
+library(Metrics)
+library(ranger)
+
+#Loading raw file
 
 diabetes <- read_csv("diabetes_binary_health_indicators_BRFSS2015.csv")
 
@@ -80,10 +90,7 @@ function(Age= 9, Sex=0, BMI= 17.38218, GenHlth=2, HighBP=0, HighChol=0, Stroke=0
   }
   
   
-  return(list(
-    prediction = paste("The prediction is ", class_pred, "with predicted probability of ",prob_pred),
-    example_url = list("http://127.0.0.1:8080/pred?Age=9&Sex=1&BMI=17.3822&GenHlth=5&HighBP=1&HighChol=1&Stroke=1&HeartDiseaseorAttack=1&DiffWalk=1",
-                       "http://127.0.0.1:8080/pred?Age=13&Sex=0&BMI=37.3822&GenHlth=3&HighBP=0&HighChol=1&Stroke=1&HeartDiseaseorAttack=1&DiffWalk=1")))
+  return( paste("The prediction is", substr(class_pred,2,2), "with predicted probability of", prob_pred))
 }
 
 #Send a message
@@ -91,3 +98,11 @@ function(Age= 9, Sex=0, BMI= 17.38218, GenHlth=2, HighBP=0, HighChol=0, Stroke=0
 function(){
   list(name = "Smit Miyani", github_page_url = "https://github.com/smitmiyani23/FinalProject/tree/main")
 }
+
+##Example Queries
+
+#http://127.0.0.1:8000/pred?Age=9&Sex=1&BMI=20&GenHlth=3&HighBP=1&HighChol=1&Stroke=1&HeartDiseaseorAttack=1&DiffWalk=1
+
+#http://127.0.0.1:8000/pred?Age=13&Sex=0&BMI=37.3822&GenHlth=3&HighBP=0&HighChol=1&Stroke=1&HeartDiseaseorAttack=1&DiffWalk=1",
+
+#http://127.0.0.1:8000/info
