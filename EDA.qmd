@@ -155,10 +155,12 @@ Since the response variable is binary, we can obtain estimates "p_hat" and "q_ha
 
 ```{r}
 #Properly coeerce factors to numeric
+binary_vec <- data.frame(diabetes_processed$Diabetes_binary)
 binary_vec$diabetes_processed.Diabetes_binary <- as.numeric(binary_vec$diabetes_processed.Diabetes_binary)
 binary_vec$bool <- ifelse(
   binary_vec$diabetes_processed.Diabetes_binary == 1,yes = 0,no = 1 )
-binary_vec
+
+head(binary_vec)
 
 p_hat <- sum((binary_vec$bool))/length(diabetes_processed$Diabetes_binary)
 

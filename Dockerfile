@@ -17,17 +17,29 @@ RUN Rscript -e 'remotes::install_version("Metrics", version = "0.1.4", upgrade="
 RUN Rscript -e 'remotes::install_version("ranger", version = "0.16.0", upgrade="never")'
 
 
+# install the linux libraries needed for plumber
+
+RUN apt-get update -qq && apt-get install -y \
+    libpng-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libsodium-dev \
+    libwebsockets-dev \
+    libuv1-dev
+
+#Install plumber
+RUN apt update -qq \
+  && apt install --yes --no-install-recommends \
+  r-cran-plumber
+
+
 
 # copy everything from the current directory into the container
 COPY myAPI.R myAPI.R
 
 # open port to traffic
 EXPOSE 8000
-
-#
-RUN apt update -qq \
-&& apt install --yes --no-install-recommends \
-r-cran-plumber
 
 # when the container starts, starting the myAPI script
 

@@ -57,6 +57,37 @@ Log loss is a way to measure how well a model predicts probabilities, especially
 
 # Data Split
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+#Remove Warnings
+```
+
+
+
+```{r}
+#Packages
+library(tidyverse)
+library(caret)
+library(ggplot2)
+library(plotly)
+library(reshape2)
+library(caret)
+library(Metrics)
+library(ranger)
+
+diabetes_data <- read_csv("diabetes_binary_health_indicators_BRFSS2015.csv")
+
+diabetes_data <- diabetes_data |>
+  select(-c(CholCheck,MentHlth,PhysHlth))
+
+diabetes_processed <- diabetes_data |>
+  #Converts all columns to factors
+  mutate(across(everything(),as.factor)) |>
+  #Converts the only non-categorical variable back to numeric 
+  mutate(BMI = as.numeric(BMI))
+```
+
 Splitting the data in test set and train set using `createDataPartition()`. All the models will be tuned with Cross Validation on `train` and evaluated on `test`.
 
 ```{r}
@@ -190,7 +221,7 @@ paste("Model 3 logLoss: ",logLoss(test_metrics, pred_lr3$X1));
 
 ```
 
-Based on the logLoss metric, `logreg_fit1` is the best model from Logistic regression type models with 0.32136. \
+Based on the logLoss metric, `logreg_fit1` is the best model from Logistic regression type models with 0.32136.\
 
 ```{r}
 #Model
