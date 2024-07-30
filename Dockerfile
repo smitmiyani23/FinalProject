@@ -8,35 +8,25 @@ RUN apt-get update -qq && apt-get install -y  libssl-dev  libcurl4-gnutls-dev  l
 
 #Alternative packages installation
 RUN R -e 'install.packages("remotes")' 
-RUN Rscript -e 'remotes::install_version("tidyverse", version = "2.0.0", upgrade="never")'
-RUN Rscript -e 'remotes::install_version("caret", version = "6.0-94", upgrade="never")'
-RUN Rscript -e 'remotes::install_version("ggplot2", version = "3.5.1", upgrade="never")'
-RUN Rscript -e 'remotes::install_version("plotly", version = "4.10.4", upgrade="never")'
-RUN Rscript -e 'remotes::install_version("reshape2", version = "1.4.4", upgrade="never")'
-RUN Rscript -e 'remotes::install_version("Metrics", version = "0.1.4", upgrade="never")'
-RUN Rscript -e 'remotes::install_version("ranger", version = "0.16.0", upgrade="never")'
-
-
-# install the linux libraries needed for plumber
-
-RUN apt-get update -qq && apt-get install -y \
-    libpng-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libxml2-dev \
-    libsodium-dev \
-    libwebsockets-dev \
-    libuv1-dev
-
-#Install plumber
-RUN apt update -qq \
-  && apt install --yes --no-install-recommends \
-  r-cran-plumber
+RUN R -e 'install.packages("tidyverse")'
+RUN R -e 'install.packages("caret")'
+RUN R -e 'install.packages("ggplot2")'
+RUN R -e 'install.packages("plotly")'
+RUN R -e 'install.packages("reshape2")'
+RUN R -e 'install.packages("Metrics")'
+RUN R -e 'install.packages("ranger")'
+RUN R -e "install.packages('plumber')"
 
 
 
-# copy everything from the current directory into the container
-COPY myAPI.R myAPI.R
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy specific files from the current directory to the container
+COPY myAPI.R /app/
+COPY Dockerfile /app/
+COPY diabetes_binary_health_indicators_BRFSS2015.csv /app/
+COPY Docker_project.Rproj /app/
 
 # open port to traffic
 EXPOSE 8000
@@ -44,6 +34,4 @@ EXPOSE 8000
 # when the container starts, starting the myAPI script
 
 ENTRYPOINT ["R", "-e", \
-    "library(plumber); library(tidyverse); library(caret); library(ggplot2);\
-    library(plotly); library(reshape2); library(Metrics); library(ranger);\
-    plumb('myAPI.R')$run(port=8000, host='0.0.0.0')"]
+    "pr <- plumber::plumb('myAPI.R'); pr$run(host='0.0.0.0', port=8000)"]

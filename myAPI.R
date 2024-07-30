@@ -7,6 +7,7 @@ library(reshape2)
 library(caret)
 library(Metrics)
 library(ranger)
+library(plumber)
 
 #Loading raw file
 
@@ -37,13 +38,13 @@ trctrl_lr <- trainControl(
 
 #Retraining Best Model type on full set
 logreg_fit <- train(Diabetes_binary ~., 
-                     data = training, 
-                     method = "glm",
-                     trControl=trctrl_lr,
-                     preProcess = c("center", "scale"),
-                     family = "binomial",
-                     metric = "logLoss",
-                     tuneLength = 10
+                    data = training, 
+                    method = "glm",
+                    trControl=trctrl_lr,
+                    preProcess = c("center", "scale"),
+                    family = "binomial",
+                    metric = "logLoss",
+                    tuneLength = 10
 )
 
 
